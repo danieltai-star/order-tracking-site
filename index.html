@@ -1,162 +1,216 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>訂單出貨查詢</title>
-
-<style>
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
-  background: #f7f7f7;
-  margin: 0;
-  padding: 20px;
-}
-
-.container {
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-h1 {
-  font-size: 26px;
-  margin-bottom: 8px;
-}
-
-.subtitle {
-  color: #666;
-  margin-bottom: 20px;
-}
-
-input {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  margin-bottom: 12px;
-}
-
-button {
-  width: 100%;
-  padding: 14px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: none;
-  background: black;
-  color: white;
-  cursor: pointer;
-}
-
-button:active {
-  opacity: 0.8;
-}
-
-.card {
-  margin-top: 20px;
-  padding: 18px;
-  background: white;
-  border-radius: 14px;
-  display: none;
-}
-
-.status {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-.status.green { color: #2e7d32; }
-.status.blue { color: #1976d2; }
-.status.orange { color: #ef6c00; }
-.status.gray { color: #666; }
-
-.label {
-  color: #888;
-  font-size: 14px;
-}
-
-.value {
-  margin-bottom: 10px;
-}
-
-.error {
-  color: #c62828;
-}
-
-.loading {
-  text-align: center;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<h1>訂單出貨查詢</h1>
-<div class="subtitle">輸入訂單編號，查看最新出貨進度</div>
-
-<input id="orderId" placeholder="例如 HL1001" />
-<button onclick="search()">查詢</button>
-
-<div id="card" class="card"></div>
-
-</div>
-
-<script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbzMpnTLJb5w0W7EOlq8mBY10cqAr1cxV219RUOHVlilxXYWWQyI8gXhe7kbDjZ02rFvkw/exec';
-
-function getStatusClass(status) {
-  if (!status) return "gray";
-  if (status.includes("已送達")) return "green";
-  if (status.includes("配送")) return "blue";
-  if (status.includes("出貨")) return "blue";
-  if (status.includes("備貨")) return "orange";
-  return "gray";
-}
-
-async function search() {
-  const orderId = document.getElementById('orderId').value.trim();
-  const card = document.getElementById('card');
-
-  if (!orderId) {
-    card.style.display = "block";
-    card.innerHTML = `<div class="error">請輸入訂單編號</div>`;
-    return;
-  }
-
-  card.style.display = "block";
-  card.innerHTML = `<div class="loading">查詢中...</div>`;
-
-  try {
-    const res = await fetch(`${API_URL}?order_id=${orderId}`);
-    const data = await res.json();
-
-    if (!data.success) {
-      card.innerHTML = `<div class="error">查無訂單，請確認編號</div>`;
-      return;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>訂單查詢系統</title>
+  <!-- 引入 Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #FBFBFB;
+      color: #1D1D1F;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    .loading-spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-left-color: #fff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
     }
 
-    const d = data.data;
-    const statusClass = getStatusClass(d.shipping_status);
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-    card.innerHTML = `
-      <div class="status ${statusClass}">
-        ${d.shipping_status || "處理中"}
+    .fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center px-6 py-12 sm:py-24">
+
+  <div class="w-full max-w-md">
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="text-3xl font-semibold tracking-tight mb-2">訂單查詢</h1>
+      <p class="text-gray-500 font-light">輸入您的訂單編號以追蹤最新進度</p>
+    </header>
+
+    <!-- Search Input -->
+    <div class="relative mb-8">
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+        <i data-lucide="search" class="w-5 h-5"></i>
+      </div>
+      <input
+        type="text"
+        id="orderId"
+        placeholder="例如 HL1001"
+        class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 pl-12 focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all duration-300 shadow-sm placeholder:text-gray-300"
+      />
+      <button
+        id="searchBtn"
+        class="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-6 py-2.5 rounded-xl font-medium text-sm hover:bg-zinc-800 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[80px]"
+      >
+        <span id="btnText">查詢</span>
+        <div id="btnLoader" class="loading-spinner hidden"></div>
+      </button>
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorBox" class="hidden fade-in flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm mb-6">
+      <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+      <p id="errorMsg"></p>
+    </div>
+
+    <!-- Result Card -->
+    <div id="resultCard" class="hidden fade-in bg-white border border-gray-100 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+      <div class="flex justify-between items-start mb-8">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-1">Order ID</p>
+          <h2 id="resOrderId" class="text-xl font-medium"></h2>
+        </div>
+        <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full">
+          <i id="statusIcon" class="w-4 h-4"></i>
+          <span id="resStatus" class="text-sm font-medium"></span>
+        </div>
       </div>
 
-      <div class="label">訂單編號</div>
-      <div class="value">${d.order_id}</div>
+      <div class="space-y-6">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">出貨日期</p>
+            <p id="resDate" class="text-gray-700"></p>
+          </div>
+        </div>
 
-      <div class="label">出貨日期</div>
-      <div class="value">${d.shipping_date || "尚未出貨"}</div>
-    `;
+        <div class="pt-6 border-t border-gray-50">
+          <div class="flex items-center justify-between text-sm text-gray-400 hover:text-gray-600 transition-colors cursor-pointer group">
+            <span>查看詳細物流資訊</span>
+            <i data-lucide="chevron-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  } catch (e) {
-    card.innerHTML = `<div class="error">系統暫時無法查詢</div>`;
-  }
-}
-</script>
+    <!-- Footer -->
+    <footer class="mt-24 text-center">
+      <div class="inline-flex items-center gap-2 text-gray-300 text-xs">
+        <div class="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+        <span>MUJI Style Order Tracking</span>
+      </div>
+    </footer>
+  </div>
 
+  <!-- 引入 Lucide 圖示庫 -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    // 初始化圖示
+    lucide.createIcons();
+
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzMpnTLJb5w0W7EOlq8mBY10cqAr1cxV219RUOHVlilxXYWWQyI8gXhe7kbDjZ02rFvkw/exec';
+
+    const orderInput = document.getElementById('orderId');
+    const searchBtn = document.getElementById('searchBtn');
+    const btnText = document.getElementById('btnText');
+    const btnLoader = document.getElementById('btnLoader');
+    const errorBox = document.getElementById('errorBox');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultCard = document.getElementById('resultCard');
+
+    const resOrderId = document.getElementById('resOrderId');
+    const resStatus = document.getElementById('resStatus');
+    const resDate = document.getElementById('resDate');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusIcon = document.getElementById('statusIcon');
+
+    function getStatusConfig(status) {
+      switch (status) {
+        case '已出貨':
+          return { color: 'text-blue-600 bg-blue-50', icon: 'package' };
+        case '配送中':
+          return { color: 'text-amber-600 bg-amber-50', icon: 'truck' };
+        case '已送達':
+          return { color: 'text-emerald-600 bg-emerald-50', icon: 'check-circle-2' };
+        default:
+          return { color: 'text-gray-500 bg-gray-50', icon: 'package' };
+      }
+    }
+
+    async function searchOrder() {
+      const orderId = orderInput.value.trim();
+
+      if (!orderId) {
+        showError('請輸入訂單編號');
+        return;
+      }
+
+      // Reset UI
+      setLoading(true);
+      errorBox.classList.add('hidden');
+      resultCard.classList.add('hidden');
+
+      try {
+        const response = await fetch(`${API_URL}?order_id=${encodeURIComponent(orderId)}`);
+        const data = await response.json();
+
+        if (data.success) {
+          displayResult(data.data);
+        } else {
+          showError(data.message || '找不到該訂單，請確認編號是否正確');
+        }
+      } catch (error) {
+        showError('系統連線異常，請稍後再試');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function setLoading(isLoading) {
+      searchBtn.disabled = isLoading;
+      if (isLoading) {
+        btnText.classList.add('hidden');
+        btnLoader.classList.remove('hidden');
+      } else {
+        btnText.classList.remove('hidden');
+        btnLoader.classList.add('hidden');
+      }
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+
+    function displayResult(data) {
+      resOrderId.textContent = data.order_id;
+      resStatus.textContent = data.shipping_status || '處理中';
+      resDate.textContent = data.shipping_date || '處理中';
+
+      const config = getStatusConfig(data.shipping_status);
+      statusBadge.className = `flex items-center gap-2 px-3 py-1.5 rounded-full ${config.color}`;
+      statusIcon.setAttribute('data-lucide', config.icon);
+      
+      resultCard.classList.remove('hidden');
+      lucide.createIcons(); // 重新渲染新插入的圖示
+    }
+
+    searchBtn.addEventListener('click', searchOrder);
+    orderInput.addEventListener('keydown', (e) => e.key === 'Enter' && searchOrder());
+  </script>
 </body>
 </html>
