@@ -1,111 +1,162 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>訂單查詢</title>
-  <style>
-    body {
-      font-family: Arial, "Noto Sans TC", sans-serif;
-      max-width: 560px;
-      margin: 40px auto;
-      padding: 20px;
-      line-height: 1.6;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>訂單出貨查詢</title>
 
-    h1 {
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+  background: #f7f7f7;
+  margin: 0;
+  padding: 20px;
+}
 
-    p {
-      color: #555;
-      margin-bottom: 20px;
-    }
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+}
 
-    input, button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      box-sizing: border-box;
-      margin-top: 10px;
-    }
+h1 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
 
-    button {
-      cursor: pointer;
-    }
+.subtitle {
+  color: #666;
+  margin-bottom: 20px;
+}
 
-    .result {
-      margin-top: 24px;
-      padding: 16px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      display: none;
-      white-space: pre-line;
-    }
+input {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 12px;
+}
 
-    .error {
-      color: #b00020;
-    }
-  </style>
+button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: none;
+  background: black;
+  color: white;
+  cursor: pointer;
+}
+
+button:active {
+  opacity: 0.8;
+}
+
+.card {
+  margin-top: 20px;
+  padding: 18px;
+  background: white;
+  border-radius: 14px;
+  display: none;
+}
+
+.status {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.status.green { color: #2e7d32; }
+.status.blue { color: #1976d2; }
+.status.orange { color: #ef6c00; }
+.status.gray { color: #666; }
+
+.label {
+  color: #888;
+  font-size: 14px;
+}
+
+.value {
+  margin-bottom: 10px;
+}
+
+.error {
+  color: #c62828;
+}
+
+.loading {
+  text-align: center;
+}
+</style>
 </head>
+
 <body>
-  <h1>訂單出貨查詢</h1>
-  <p>請輸入您的訂單編號</p>
+<div class="container">
 
-  <input type="text" id="orderId" placeholder="例如 HL1001" />
-  <button id="searchBtn">查詢</button>
+<h1>訂單出貨查詢</h1>
+<div class="subtitle">輸入訂單編號，查看最新出貨進度</div>
 
-  <div id="result" class="result"></div>
+<input id="orderId" placeholder="例如 HL1001" />
+<button onclick="search()">查詢</button>
 
-  <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzMpnTLJb5w0W7EOlq8mBY10cqAr1cxV219RUOHVlilxXYWWQyI8gXhe7kbDjZ02rFvkw/exec';
+<div id="card" class="card"></div>
 
-    const orderInput = document.getElementById('orderId');
-    const searchBtn = document.getElementById('searchBtn');
-    const resultBox = document.getElementById('result');
+</div>
 
-    async function searchOrder() {
-      const orderId = orderInput.value.trim();
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzMpnTLJb5w0W7EOlq8mBY10cqAr1cxV219RUOHVlilxXYWWQyI8gXhe7kbDjZ02rFvkw/exec';
 
-      if (!orderId) {
-        resultBox.style.display = 'block';
-        resultBox.className = 'result error';
-        resultBox.textContent = '請先輸入訂單編號';
-        return;
-      }
+function getStatusClass(status) {
+  if (!status) return "gray";
+  if (status.includes("已送達")) return "green";
+  if (status.includes("配送")) return "blue";
+  if (status.includes("出貨")) return "blue";
+  if (status.includes("備貨")) return "orange";
+  return "gray";
+}
 
-      resultBox.style.display = 'block';
-      resultBox.className = 'result';
-      resultBox.textContent = '查詢中...';
+async function search() {
+  const orderId = document.getElementById('orderId').value.trim();
+  const card = document.getElementById('card');
 
-      try {
-        const response = await fetch(`${API_URL}?order_id=${encodeURIComponent(orderId)}`);
-        const data = await response.json();
+  if (!orderId) {
+    card.style.display = "block";
+    card.innerHTML = `<div class="error">請輸入訂單編號</div>`;
+    return;
+  }
 
-        if (data.success) {
-          resultBox.className = 'result';
-          resultBox.textContent =
-`訂單編號：${data.data.order_id}
-出貨狀態ABC：${data.data.shipping_status || '—'}
-出貨日期：${data.data.shipping_date || '—'}`;
-        } else {
-          resultBox.className = 'result error';
-          resultBox.textContent = data.message || '查詢失敗';
-        }
-      } catch (error) {
-        resultBox.className = 'result error';
-        resultBox.textContent = '系統暫時無法查詢，請稍後再試';
-      }
+  card.style.display = "block";
+  card.innerHTML = `<div class="loading">查詢中...</div>`;
+
+  try {
+    const res = await fetch(`${API_URL}?order_id=${orderId}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      card.innerHTML = `<div class="error">查無訂單，請確認編號</div>`;
+      return;
     }
 
-    searchBtn.addEventListener('click', searchOrder);
+    const d = data.data;
+    const statusClass = getStatusClass(d.shipping_status);
 
-    orderInput.addEventListener('keydown', function(event) {
-      if (event.key === 'Enter') {
-        searchOrder();
-      }
-    });
-  </script>
+    card.innerHTML = `
+      <div class="status ${statusClass}">
+        ${d.shipping_status || "處理中"}
+      </div>
+
+      <div class="label">訂單編號</div>
+      <div class="value">${d.order_id}</div>
+
+      <div class="label">出貨日期</div>
+      <div class="value">${d.shipping_date || "尚未出貨"}</div>
+    `;
+
+  } catch (e) {
+    card.innerHTML = `<div class="error">系統暫時無法查詢</div>`;
+  }
+}
+</script>
+
 </body>
 </html>
