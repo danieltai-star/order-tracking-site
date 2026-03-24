@@ -45,7 +45,7 @@
     <!-- Header -->
     <header class="text-center mb-12">
       <h1 class="text-3xl font-semibold tracking-tight mb-2">訂單查詢</h1>
-      <p class="text-gray-500 font-light">輸入您的訂單編號以追蹤最新進度</p>
+      <p class="text-gray-500 font-light">hó-lim Suí 訂單狀態追蹤</p>
     </header>
 
     <!-- Search Input -->
@@ -56,7 +56,7 @@
       <input
         type="text"
         id="orderId"
-        placeholder="例如 HL1001"
+        placeholder="請輸入贊助編號"
         class="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 pl-12 focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all duration-300 shadow-sm placeholder:text-gray-300"
       />
       <button
@@ -124,7 +124,7 @@
       const orderId = orderInput.value.trim();
 
       if (!orderId) {
-        showError('請輸入訂單編號');
+        showError('請輸入贊助編號');
         return;
       }
 
