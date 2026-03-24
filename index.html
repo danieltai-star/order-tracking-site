@@ -81,10 +81,6 @@
           <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold mb-1 font-[Arial]">Order ID</p>
           <h2 id="resOrderId" class="text-xl font-medium"></h2>
         </div>
-        <div id="statusBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-full">
-          <i id="statusIcon" class="w-4 h-4"></i>
-          <span id="resStatus" class="text-lg font-medium"></span>
-        </div>
       </div>
 
       <div class="space-y-6">
@@ -93,9 +89,13 @@
             <i data-lucide="package" class="w-5 h-5"></i>
           </div>
           <div class="flex-1">
-            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">出貨日期</p>
+            <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">預估出貨時程</p>
             <p id="resDate" class="text-gray-700 font-medium"></p>
           </div>
+        </div>
+        
+        <div class="pt-4 border-t border-gray-50">
+          <p class="text-[13px] text-[#6c6c6c]">將於出貨前 7 天內提供實際出貨日期，並持續更新於查詢系統中。</p>
         </div>
       </div>
     </div>
@@ -126,23 +126,7 @@
     const resultCard = document.getElementById('resultCard');
 
     const resOrderId = document.getElementById('resOrderId');
-    const resStatus = document.getElementById('resStatus');
     const resDate = document.getElementById('resDate');
-    const statusBadge = document.getElementById('statusBadge');
-    const statusIcon = document.getElementById('statusIcon');
-
-    function getStatusConfig(status) {
-      switch (status) {
-        case '已出貨':
-          return { color: 'text-blue-600 bg-blue-50', icon: 'package' };
-        case '配送中':
-          return { color: 'text-amber-600 bg-amber-50', icon: 'truck' };
-        case '已送達':
-          return { color: 'text-emerald-600 bg-emerald-50', icon: 'check-circle-2' };
-        default:
-          return { color: 'text-gray-500 bg-gray-50', icon: 'package' };
-      }
-    }
 
     async function searchOrder() {
       const orderId = orderInput.value.trim();
@@ -191,12 +175,7 @@
 
     function displayResult(data) {
       resOrderId.textContent = data.order_id;
-      resStatus.textContent = data.shipping_status || '處理中';
       resDate.textContent = data.shipping_date || '處理中';
-
-      const config = getStatusConfig(data.shipping_status);
-      statusBadge.className = `flex items-center gap-2 px-3 py-1.5 rounded-full ${config.color}`;
-      statusIcon.setAttribute('data-lucide', config.icon);
       
       resultCard.classList.remove('hidden');
       lucide.createIcons(); // 重新渲染新插入的圖示
